@@ -1,0 +1,30 @@
+{
+  "name": "scorpio/sphinx-search",
+  "type": "library",
+  "description": "A set of classes wrapping the SphinxClient extension in a object-oriented way.",
+  "keywords": [ "scorpio", "sphinx", "sphinx search" ],
+  "minimum-stability": "dev",
+  "license": "BSD",
+  "authors": [
+    {
+      "name": "Dave Redfern",
+      "email": "dave@scorpioframework.com",
+      "homepage": "http://www.madagasgar.com"
+    }
+  ],
+  "autoload": {
+    "psr-0": {
+      "": "src/"
+    }
+  },
+  "config": {
+    "bin-dir": "bin"
+  },
+  "require": {
+    "php": ">=5.5.0",
+    "ext-sphinx": "*"
+  },
+  "require-dev": {
+    "codeception/codeception": "2.1.*"
+  }
+}
