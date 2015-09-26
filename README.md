@@ -85,6 +85,6 @@ Links
  * http://ca.php.net/sphinx
  * https://github.com/gigablah/sphinxphp
 
-A more modern SQL like Sphinx-QL exists:
+A more modern SQL like Sphinx-QL exists, see the following for more details:
 
  * https://github.com/FoolCode/SphinxQL-Query-Builder

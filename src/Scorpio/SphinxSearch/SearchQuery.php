@@ -215,7 +215,7 @@ class SearchQuery
             $filter->bindToSphinx($sphinx);
         }
 
-        $this->id = $sphinx->addQuery($this->query, $this->index->getName());
+        $this->id = $sphinx->addQuery($this->query, $this->index->getIndexName());
 
         return $this;
     }
@@ -255,9 +255,9 @@ class SearchQuery
      */
     public function addGroupBy($attribute, $function, $groupBy = '@group desc')
     {
-        if (!$this->index->isValidFilter($attribute)) {
+        if (!$this->index->isValidAttribute($attribute)) {
             throw new \InvalidArgumentException(
-                sprintf('Group by filter attribute "%s" is not valid for index "%s', $attribute, $this->index->getName())
+                sprintf('Group by filter attribute "%s" is not valid for index "%s', $attribute, $this->index->getIndexName())
             );
         }
 
@@ -472,11 +472,11 @@ class SearchQuery
         if (array_key_exists($attribute, $this->filters)) {
             return $this->filters[$attribute];
         } else {
-            if ($this->index->isValidFilter($attribute)) {
+            if ($this->index->isValidAttribute($attribute)) {
                 return $this->filters[$attribute] = new FilterAttribute($attribute);
             } else {
                 throw new \InvalidArgumentException(
-                    sprintf('Filter "%s" is not valid for index "%s"', $attribute, $this->index->getName())
+                    sprintf('Filter "%s" is not valid for index "%s"', $attribute, $this->index->getIndexName())
                 );
             }
         }
@@ -491,7 +491,7 @@ class SearchQuery
      */
     public function addFilter(FilterInterface $filter)
     {
-        if ($this->index->isValidFilter($filter->getName())) {
+        if ($this->index->isValidAttribute($filter->getName())) {
             $this->filters[$filter->getName()] = $filter;
         }
 

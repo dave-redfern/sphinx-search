@@ -19,20 +19,14 @@ class TestIndex2 extends SearchIndex
 {
     protected function initialise()
     {
-        $this->name = 'testindex';
+        $this->indexName = 'testindex';
 
         $this->availableFields  = [
             'name', 'gender', 'address',
         ];
-        $this->availableFilters = [
+        $this->availableAttributes = [
             'age', 'gender', 'bob',
         ];
-    }
-
-    public function enableWildcards()
-    {
-        $this->supportsWildcard = true;
-        $this->useWildcardKeywords = true;
     }
 }
 
@@ -76,11 +70,22 @@ class SearchIndexTest extends \Codeception\TestCase\Test
     }
 
     // tests
-    public function testGetName()
+    public function testGetIndexName()
     {
-        $this->assertEquals('testindex', $this->object->getName());
+        $this->assertEquals('testindex', $this->object->getIndexName());
         $this->assertEquals('testindex', $this->object->toString());
         $this->assertEquals('testindex', (string)$this->object);
+    }
+
+    public function testCanInstantiateWithSettings()
+    {
+        $index = new SearchIndex('bob', ['field1','field2'], ['attr1', 'attr2'], 'MyClass', 'MyClass');
+
+        $this->assertEquals('bob', $index->getIndexName());
+        $this->assertEquals('MyClass', $index->getResultSetClass());
+        $this->assertEquals('MyClass', $index->getResultClass());
+        $this->assertSame(['field1', 'field2'], $index->getAvailableFields());
+        $this->assertSame(['attr1', 'attr2'], $index->getAvailableAttributes());
     }
 
     public function testGetResultSetClass()
@@ -100,7 +105,7 @@ class SearchIndexTest extends \Codeception\TestCase\Test
 
     public function testGetAvailableFilters()
     {
-        $this->assertInternalType('array', $this->object->getAvailableFilters());
+        $this->assertInternalType('array', $this->object->getAvailableAttributes());
     }
 
     public function testIsValidField()
@@ -111,8 +116,8 @@ class SearchIndexTest extends \Codeception\TestCase\Test
 
     public function testIsValidFilter()
     {
-        $this->assertFalse($this->object->isValidFilter('name'));
-        $this->assertTrue($this->object->isValidFilter('bob'));
+        $this->assertFalse($this->object->isValidAttribute('name'));
+        $this->assertTrue($this->object->isValidAttribute('bob'));
     }
 
     public function testCreateFieldQueryStringRaisesExceptionForInvalidField()
