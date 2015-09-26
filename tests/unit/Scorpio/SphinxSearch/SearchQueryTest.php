@@ -102,7 +102,7 @@ class SearchQueryTest extends \Codeception\TestCase\Test
     {
         $query = new SearchQuery(new TestIndex(), '@name keywords', null);
 
-        $this->assertEquals(SearchQuery::MATCH_ADVANCED, $query->getMatchMode());
+        $this->assertEquals(SearchQuery::RANK_PROXIMITY_BM25, $query->getRankingMode());
     }
 
     public function testToString()
@@ -177,8 +177,8 @@ class SearchQueryTest extends \Codeception\TestCase\Test
 
     public function testSetMatchMode()
     {
-        $this->object->setMatchMode(SearchQuery::MATCH_ANY);
-        $this->assertEquals(SearchQuery::MATCH_ANY, $this->object->getMatchMode());
+        $this->object->setRankingMode(SearchQuery::RANK_WORD_COUNT);
+        $this->assertEquals(SearchQuery::RANK_WORD_COUNT, $this->object->getRankingMode());
     }
 
     public function testSetGroupBy()
