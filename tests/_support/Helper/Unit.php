@@ -44,7 +44,7 @@ class Unit extends \Codeception\Module
     public function createNameSearchQuery()
     {
         return new SearchQuery(
-            new TestIndexName(), '', SearchQuery::MATCH_ADVANCED, []
+            new TestIndexName(), '', SearchQuery::RANK_PROXIMITY_BM25, []
         );
     }
 
@@ -54,7 +54,7 @@ class Unit extends \Codeception\Module
     public function createAddressSearchQuery()
     {
         return new SearchQuery(
-            new TestIndexAddress(), '', SearchQuery::MATCH_ADVANCED, []
+            new TestIndexAddress(), '', SearchQuery::RANK_PROXIMITY_BM25, []
         );
     }
 
@@ -96,7 +96,7 @@ class Unit extends \Codeception\Module
             'resetGroupBy'        => function () {
                 return true;
             },
-            'setMatchMode'        => function () {
+            'setRankingMode'        => function () {
                 return true;
             },
             'addQuery'            => function () {

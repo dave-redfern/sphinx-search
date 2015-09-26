@@ -181,9 +181,6 @@ class SearchIndex
     /**
      * Creates a query string for searching within the specific field of the index
      *
-     * Note: using this method automatically sets the match mode to MATCH_ADVANCED
-     * or SPH_MATCH_EXTENDED2 to allow the @<field> syntax to function.
-     *
      * @param string|array $field Comma separated list of fields or array
      * @param string       $keywords
      *

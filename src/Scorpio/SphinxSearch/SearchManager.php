@@ -37,7 +37,7 @@ use Scorpio\SphinxSearch\Result\ResultSet;
  * use Scorpio\SphinxSearch\Query;
  *
  * $oQuery = new SearchQuery(
- *      new SomeSearchIndex(), 'some keywords', SearchQuery::MATCH_ADVANCED, [
+ *      new SomeSearchIndex(), 'some keywords', SearchQuery::RANK_PROXIMITY_BM25, [
  *          new Filter\FilterAttribute(SomeSearchIndex::FILTER_ON_SOME_FILED, [6])
  *      ],
  *      new SortBy(Query\SortBy::SORT_BY_RELEVANCE, '@relevance DESC')
@@ -62,21 +62,21 @@ use Scorpio\SphinxSearch\Result\ResultSet;
  * $oSphinx = new SearchManager(new ServerSettings('localhost', '9312'));
  * $oSphinx->addQuery(
  *      new SearchQuery(
- *          new SomeSearchIndex(), 'some keywords', SearchQuery::MATCH_ADVANCED, [
+ *          new SomeSearchIndex(), 'some keywords', SearchQuery::RANK_PROXIMITY_BM25, [
  *              new Filter\FilterAttribute(SomeSearchIndex::FILTER_ON_SOME_FILED, [6])
  *          ],
  *          new SortBy(Query\SortBy::SORT_BY_RELEVANCE, '@relevance DESC')
  *      )
  * )->addQuery(
  *      new SearchQuery(
- *          new SomeSearchIndex(), 'some other keywords', SearchQuery::MATCH_ADVANCED, [
+ *          new SomeSearchIndex(), 'some other keywords', SearchQuery::RANK_PROXIMITY_BM25, [
  *              new Filter\FilterAttribute(SomeSearchIndex::FILTER_ON_SOME_FILED, [4])
  *          ],
  *          new SortBy(Query\SortBy::SORT_BY_RELEVANCE, '@relevance DESC')
  *      )
  * )->addQuery(
  *      new SearchQuery(
- *          new SomeSearchIndex(), 'some other keywords', SearchQuery::MATCH_ADVANCED, [
+ *          new SomeSearchIndex(), 'some other keywords', SearchQuery::RANK_PROXIMITY_BM25, [
  *              new Filter\FilterAttribute(SomeSearchIndex::FILTER_ON_SOME_FILED, [112])
  *          ],
  *          new SortBy(Query\SortBy::SORT_BY_RELEVANCE, '@relevance DESC')

@@ -42,7 +42,7 @@ use Scorpio\SphinxSearch\Query\SortBy;
  * use Scorpio\SphinxSearch\Filter;
  *
  * $oQuery = new SearchQuery(new SomeIndex());
- * $oQuery->setMatchMode(SearchQuery::MATCH_ADVANCED);
+ * $oQuery->setRankingMode(SearchQuery::RANK_PROXIMITY_BM25);
  * $oQuery->setQuery(
  *      $oQuery->getIndex()->createFieldQueryString(
  *          array(
@@ -67,10 +67,10 @@ use Scorpio\SphinxSearch\Query\SortBy;
 class SearchQuery
 {
 
-    const MATCH_ALL      = SPH_MATCH_ALL;
-    const MATCH_ANY      = SPH_MATCH_ANY;
-    const MATCH_ADVANCED = SPH_MATCH_EXTENDED2;
-    const MATCH_PHRASE   = SPH_MATCH_PHRASE;
+    const RANK_NONE           = SPH_RANK_NONE;      // ranker just assigns every document weight to 1.
+    const RANK_WORD_COUNT     = SPH_RANK_WORDCOUNT; // ranker counts all the keyword occurrences and multiplies them by user field weights.
+    const RANK_PROXIMITY_BM25 = SPH_RANK_PROXIMITY_BM25; // the default SphinxQL ranker
+    const RANK_BM25           = SPH_RANK_BM25 ;          // ranker sums user weights of the matched fields and BM25.
 
     /**
      * @var integer
@@ -95,7 +95,7 @@ class SearchQuery
     /**
      * @var integer
      */
-    private $matchMode = self::MATCH_ADVANCED;
+    private $rankingMode = self::RANK_PROXIMITY_BM25;
 
     /**
      * @var GroupBy
@@ -118,24 +118,21 @@ class SearchQuery
      * Constructor
      *
      * @param SearchIndex       $index
-     * @param string            $query     Valid Sphinx query e.g. "keywords" or @<field> "keywords"
-     * @param integer           $matchMode SPH_MATCH_* constant, default extended2
-     * @param FilterInterface[] $filters   An array of filter objects
-     * @param SortBy            $sortBy    The sorting to apply
-     * @param GroupBy           $groupBy   How to group the query
-     * @param Limits            $limits    Query limits
+     * @param string            $query    Valid Sphinx query e.g. "keywords" or @<field> "keywords"
+     * @param integer           $rankMode SPH_RANK_* constant, default SPH_RANK_PROXIMIT_BM25
+     * @param FilterInterface[] $filters  An array of filter objects
+     * @param SortBy            $sortBy   The sorting to apply
+     * @param GroupBy           $groupBy  How to group the query
+     * @param Limits            $limits   Query limits
      */
     public function __construct(
-        SearchIndex $index, $query = '', $matchMode = null, array $filters = [],
+        SearchIndex $index, $query = '', $rankMode = null, array $filters = [],
         SortBy $sortBy = null, GroupBy $groupBy = null, Limits $limits = null
     )
     {
         $this->id = 0;
-        $this->setIndex($index)->setQuery($query)->setMatchMode($matchMode);
-
-        if (false !== strpos($query, '@')) {
-            $this->setMatchMode(self::MATCH_ADVANCED);
-        }
+        $this->setIndex($index)->setQuery($query)->setRankingMode($rankMode);
+        $this->setRankingMode((null !== $rankMode ? $rankMode : self::RANK_PROXIMITY_BM25));
 
         foreach ($filters as $filter) {
             $this->addFilter($filter);
@@ -204,7 +201,7 @@ class SearchQuery
         $sphinx->resetFilters();
         $sphinx->resetGroupBy();
 
-        $sphinx->setMatchMode($this->matchMode);
+        $sphinx->setRankingMode($this->rankingMode);
 
         if ($this->groupBy instanceof GroupBy) {
             $this->groupBy->bindToSphinx($sphinx);
@@ -226,7 +223,6 @@ class SearchQuery
     /**
      * Creates a search query for specific fields in the index using the keywords.
      *
-     * Note: this method automatically sets the matchmode to ADVANCED (SPH_MATCH_EXTENDED2).
      * Fields is either a comma separated list (field,field2,field3) or an array. Keywords
      * should be the standard string.
      *
@@ -237,7 +233,6 @@ class SearchQuery
      */
     public function queryInFields($fields, $keywords)
     {
-        $this->setMatchMode(self::MATCH_ADVANCED);
         $this->setQuery($this->getIndex()->createFieldQueryString($fields, $keywords));
 
         return $this;
@@ -362,9 +357,9 @@ class SearchQuery
     /**
      * @return integer
      */
-    public function getMatchMode()
+    public function getRankingMode()
     {
-        return $this->matchMode;
+        return $this->rankingMode;
     }
 
     /**
@@ -372,10 +367,10 @@ class SearchQuery
      *
      * @return $this
      */
-    public function setMatchMode($mode)
+    public function setRankingMode($mode)
     {
         if (null !== $mode && is_integer($mode)) {
-            $this->matchMode = $mode;
+            $this->rankingMode = $mode;
         }
 
         return $this;
