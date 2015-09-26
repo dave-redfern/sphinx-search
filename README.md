@@ -1,5 +1,5 @@
-Scorpio SphinxSearch Library Change Log
-=======================================
+Scorpio SphinxSearch
+====================
 
 SphinxSearch library is a wrapper around the PHP Sphinx extension that allows for a cleaner object oriented interface.
 
