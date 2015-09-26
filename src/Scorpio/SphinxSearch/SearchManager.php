@@ -163,7 +163,7 @@ class SearchManager implements \IteratorAggregate, \Countable
      *
      * @param SearchQuery $query
      *
-     * @return SearchManager
+     * @return $this
      */
     public function addQuery(SearchQuery $query)
     {

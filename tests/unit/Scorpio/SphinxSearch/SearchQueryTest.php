@@ -21,11 +21,11 @@ class TestIndex extends SearchIndex
 {
     protected function initialise()
     {
-        $this->name = 'testindex';
+        $this->indexName = 'testindex';
         $this->availableFields = [
             'name', 'gender', 'address',
         ];
-        $this->availableFilters = [
+        $this->availableAttributes = [
             'age', 'gender', 'bob',
         ];
     }

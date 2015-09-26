@@ -23,6 +23,46 @@ use Scorpio\SphinxSearch\Filter\FilterAttribute;
 class Utils
 {
 
+    private function __construct() {}
+    private function __clone() {}
+
+    /**
+     * Converts the string to an array, exploding a list via $separator if it exists
+     *
+     * @param string $string
+     * @param string $separator (optional) Default comma (,)
+     *
+     * @return array
+     */
+    public static function convertStringToArray($string, $separator = ',')
+    {
+        if (strpos($string, $separator) !== false) {
+            $value = explode($separator, trim($string));
+        } else {
+            $value = [$string];
+        }
+
+        return $value;
+    }
+
+    /**
+     * Applies escaping to the keywords string
+     *
+     * @param string $string
+     *
+     * @return string
+     */
+    public static function escapeQueryString($string)
+    {
+        /*
+         * Taken from the sphinxapi.php since SphinxClient::escapeString doesn't escape $ signs
+         */
+        $from = array('\\', '(', ')', '|', '-', '!', '@', '~', '"', '&', '/', '^', '$', '=');
+        $to   = array('\\\\', '\(', '\)', '\|', '\-', '\!', '\@', '\~', '\"', '\&', '\/', '\^', '\$', '\=');
+
+        return str_replace($from, $to, $string);
+    }
+
     /**
      * Creates an array of Sphinx filters from the provided criteria
      *
@@ -69,25 +109,6 @@ class Utils
     }
 
     /**
-     * Converts the string to an array, exploding a list via $separator if it exists
-     *
-     * @param string $string
-     * @param string $separator (optional) Default comma (,)
-     *
-     * @return array
-     */
-    public static function convertStringToArray($string, $separator = ',')
-    {
-        if (strpos($string, $separator) !== false) {
-            $value = explode($separator, trim($string));
-        } else {
-            $value = [$string];
-        }
-
-        return $value;
-    }
-
-    /**
      * Converts strings to integers
      *
      * If the attribute map and the key is set, the value will be converted
@@ -125,23 +146,5 @@ class Utils
         } else {
             return null;
         }
-    }
-
-    /**
-     * Applies escaping to the keywords string
-     *
-     * @param string $string
-     *
-     * @return string
-     */
-    public static function escapeQueryString($string)
-    {
-        /*
-         * Taken from the sphinxapi.php since SphinxClient::escapeString doesn't escape $ signs
-         */
-        $from = array('\\', '(', ')', '|', '-', '!', '@', '~', '"', '&', '/', '^', '$', '=');
-        $to   = array('\\\\', '\(', '\)', '\|', '\-', '\!', '\@', '\~', '\"', '\&', '\/', '\^', '\$', '\=');
-
-        return str_replace($from, $to, $string);
     }
 }

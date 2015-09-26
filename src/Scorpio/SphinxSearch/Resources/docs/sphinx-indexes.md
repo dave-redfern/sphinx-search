@@ -20,8 +20,16 @@ SearchIndex
 The SearchIndex class defines all the attributes and the index name so that we can easily use the Sphinx
 index in the SearchManager.
 
-The first step is to create a new class that extends SearchIndex. It is good practice to be consistent
-with the naming e.g.: name the index after the Sphinx name using CamelCase, my_index => MyIndex or
+The easiest way is to simply inject the parameters into the constructor when instantiating the class:
+
+    $index = new SearchIndex('my_index', ['fields', 'in', 'index'], ['attr','in','index']);
+
+However for frequently used indexes, or when you want to use a typed instance, a SearchIndexInterface
+class can be either created, or SearchIndex extended and the initialise() method overridden to set
+the various components.
+
+Create a new class that extends SearchIndex. It is good practice to be consistent with the naming
+e.g.: name the index after the Sphinx name using CamelCase, my_index => MyIndex or
 active_user_index => ActiveUserIndex.
 
     class MyIndex extends \Scorpio\SphinxSearch\SearchIndex
@@ -54,8 +62,8 @@ Now we can run a search:
 
     use Scorpio\SphinxSearch;
 
-    $sphinx  = new \SphinxClient('localhost', '9312');
-    $manager = new SearchManager($sphinx);
+    $settings = new ServerSettings('localhost', '9312');
+    $manager  = new SearchManager($settings);
 
     $query   = new SearchQuery(new MyIndex());
     $query->queryInFields('keywords', 'bob smith');
@@ -66,15 +74,16 @@ If we wanted to search for anyone with a keyword containing "smi" we could run:
 
     use Scorpio\SphinxSearch;
 
-    $sphinx  = new \SphinxClient('localhost', '9312');
-    $manager = new SearchManager($sphinx);
-    $index   = new MyIndex();
-    $query   = new SearchQuery($index);
+    $settings = new ServerSettings('localhost', '9312');
+    $manager  = new SearchManager($settings);
+    $index    = new MyIndex();
+    $query    = new SearchQuery($index);
     $query->queryInFields('keywords', $index->createWildcardQueryString('smi'));
 
     $results = $manager->query($query);
 
-"smi" will be automatically expanded to "*smi*".
+"smi" will be automatically expanded to "*smi*". Of course, any valid Sphinx query can be used
+in the query call.
 
 Custom Result Objects
 ---------------------
@@ -130,3 +139,7 @@ Then in the search index:
     }
 
 Now when the result set is iterated we will get instances of the MyIndexResultRecord.
+
+In a similar manner, the ResultSet itself can be overridden with a custom implementation allowing
+you to transform the results through a custom iterator or add any additional functionality that
+you need.

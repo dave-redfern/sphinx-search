@@ -29,13 +29,13 @@ use Scorpio\SphinxSearch\Result\ResultSet;
  * @subpackage Scorpio\SphinxSearch\SearchIndex
  * @author     Dave Redfern <dave@scorpioframework.com>
  */
-class SearchIndex
+class SearchIndex implements SearchIndexInterface
 {
 
     /**
      * @var string
      */
-    protected $name;
+    protected $indexName;
 
     /**
      * Class name to use for the result set
@@ -63,15 +63,28 @@ class SearchIndex
      *
      * @var array
      */
-    protected $availableFilters = [];
+    protected $availableAttributes = [];
 
     
     
     /**
      * Constructor.
+     *
+     * @param null|string $index          The name of the index this definition is for
+     * @param array       $fields         The available fulltext fields
+     * @param array       $attributes     The available attributes that can be filtered on
+     * @param null|string $resultSetClass (optional) Class name to use for result sets
+     * @param null|string $resultClass    (optional) Class name to use for an individual result
      */
-    function __construct()
+    function __construct($index = null, array $fields = [], array $attributes = [], $resultSetClass = null, $resultClass = null)
     {
+        $this->indexName = $index;
+        $this->availableFields = $fields;
+        $this->availableAttributes = $attributes;
+
+        if ( null !== $resultSetClass ) $this->resultSetClass = $resultSetClass;
+        if ( null !== $resultClass    ) $this->resultClass    = $resultClass;
+
         $this->initialise();
     }
 
@@ -80,7 +93,7 @@ class SearchIndex
      */
     function __toString()
     {
-        return $this->name;
+        return $this->indexName;
     }
 
     /**
@@ -109,9 +122,9 @@ class SearchIndex
      *
      * @return string
      */
-    public function getName()
+    public function getIndexName()
     {
-        return $this->name;
+        return $this->indexName;
     }
 
     /**
@@ -145,13 +158,13 @@ class SearchIndex
     }
 
     /**
-     * Returns the available filters for the current index
+     * Returns the available attributes for the current index
      *
      * @return array
      */
-    public function getAvailableFilters()
+    public function getAvailableAttributes()
     {
-        return $this->availableFilters;
+        return $this->availableAttributes;
     }
 
     /**
@@ -167,15 +180,15 @@ class SearchIndex
     }
 
     /**
-     * Returns true if the filter is valid
+     * Returns true if the attribute is valid
      *
-     * @param string $filter
+     * @param string $attr
      *
      * @return boolean
      */
-    public function isValidFilter($filter)
+    public function isValidAttribute($attr)
     {
-        return in_array($filter, $this->getAvailableFilters());
+        return in_array($attr, $this->getAvailableAttributes());
     }
 
     /**

@@ -209,20 +209,14 @@ class TestIndexName extends SearchIndex
 {
     protected function initialise()
     {
-        $this->name = 'testindexname';
+        $this->indexName = 'testindexname';
 
         $this->availableFields  = [
             'first_name', 'last_name', 'full_name',
         ];
-        $this->availableFilters = [
+        $this->availableAttributes = [
 
         ];
-    }
-
-    public function enableWildcards()
-    {
-        $this->supportsWildcard    = true;
-        $this->useWildcardKeywords = true;
     }
 }
 
@@ -231,19 +225,13 @@ class TestIndexAddress extends SearchIndex
 {
     protected function initialise()
     {
-        $this->name = 'testindexaddress';
+        $this->indexName = 'testindexaddress';
 
         $this->availableFields  = [
             'address', 'address_line_1', 'address_line_2', 'city', 'state',
         ];
-        $this->availableFilters = [
+        $this->availableAttributes = [
             'time_at_address', 'house_type',
         ];
-    }
-
-    public function enableWildcards()
-    {
-        $this->supportsWildcard    = true;
-        $this->useWildcardKeywords = true;
     }
 }

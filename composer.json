@@ -29,5 +29,10 @@
   },
   "require-dev": {
     "codeception/codeception": "2.1.*"
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.2-dev"
+    }
   }
 }
