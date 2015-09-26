@@ -46,88 +46,15 @@ class SearchManagerTest extends \Codeception\TestCase\Test
 
     protected function _before()
     {
-        $this->object = new SearchManager();
-        $this->object->setSphinx(
-            Stub::make(\SphinxClient::class, [
-                'setServer'           => function () {
-                    return true;
-                },
-                'setMaxQueryTime'     => function () {
-                    return true;
-                },
-                'setFilter'           => function () {
-                    return true;
-                },
-                'setFilterFloatRange' => function () {
-                    return true;
-                },
-                'setFilterRange'      => function () {
-                    return true;
-                },
-                'setLimits'           => function () {
-                    return true;
-                },
-                'setSortMode'         => function () {
-                    return true;
-                },
-                'setGroupBy'          => function () {
-                    return true;
-                },
-                'resetFilters'        => function () {
-                    return true;
-                },
-                'resetGroupBy'        => function () {
-                    return true;
-                },
-                'setMatchMode'        => function () {
-                    return true;
-                },
-                'addQuery'            => function () {
-                    static $i;
-                    return ++$i;
-                },
-                'runQueries' => function () {
-                    return [
-                        1 => [
-                            'matches' => [
-                                12 => [
-                                    'weight' => 34,
-                                    'attrs' => ['time_at_address' => 23, 'house_type' => 3],
-                                ],
-                                15432 => [
-                                    'weight' => 32,
-                                    'attrs' => ['time_at_address' => 1, 'house_type' => 1],
-                                ],
-                                1532 => [
-                                    'weight' => 12,
-                                    'attrs' => ['time_at_address' => 4, 'house_type' => 6],
-                                ],
-                            ],
-                            'time' => 123,
-                            'total_found' => 23,
-                        ],
-                        2 => [
-                            'matches' => [
-                                12 => [
-                                    'weight' => 34,
-                                    'attrs' => ['time_at_address' => 23, 'house_type' => 3],
-                                ],
-                                15432 => [
-                                    'weight' => 32,
-                                    'attrs' => ['time_at_address' => 1, 'house_type' => 1],
-                                ],
-                                1532 => [
-                                    'weight' => 12,
-                                    'attrs' => ['time_at_address' => 4, 'house_type' => 6],
-                                ],
-                            ],
-                            'time' => 123,
-                            'total_found' => 23,
-                        ],
-                    ];
-                },
-            ])
-        );
+        $helper = $this->I;
+
+        $settings = Stub::make(ServerSettings::class, [
+            'connect' => function () use ($helper) {
+                return $helper->createSphinxClientWithResults();
+            }
+        ]);
+
+        $this->object = new SearchManager($settings);
     }
 
     protected function _after()
@@ -135,22 +62,17 @@ class SearchManagerTest extends \Codeception\TestCase\Test
     }
 
     // tests
-    public function testGetSphinx()
+    public function testGetSettings()
     {
-        $this->assertInstanceOf(\SphinxClient::class, $this->object->getSphinx());
+        $this->object->setSettings(new ServerSettings('localhost', 3232, 320, 'bob'));
+        $this->assertInstanceOf(ServerSettings::class, $this->object->getSettings());
     }
 
-    public function testSetServer()
+    public function testGetCurrentConnection()
     {
-        $this->object->setServer('123.26.21.23', '9898', '50');
-        $this->assertTrue(true);
-    }
+        $conn = $this->object->getCurrentConnection();
 
-    public function testSetServerWithNoSphinxRaisesException()
-    {
-        $this->object->reset();
-        $this->setExpectedException('RuntimeException');
-        $this->object->setServer('123.26.21.23', '9898', '50');
+        $this->assertTrue(is_object($conn));
     }
 
     public function testThrowException()
@@ -214,15 +136,21 @@ class SearchManagerTest extends \Codeception\TestCase\Test
     {
         $this->object->reset();
 
-        $this->assertNull($this->object->getSphinx());
         $this->assertEquals(0, $this->object->count());
     }
 
     public function testSearchWillCreateMissingArrayKeys()
     {
-        $sphinx = $this->I->createSphinxClientWithIncompleteResults();
+        $helper   = $this->I;
 
-        $this->object->setSphinx($sphinx);
+        $settings = Stub::make(ServerSettings::class, [
+            'connect' => function () use ($helper) {
+                return $helper->createSphinxClientWithIncompleteResults();
+            }
+        ]);
+
+        $this->object = new SearchManager($settings);
+
         $this->object->addQuery($this->I->createAddressSearchQuery());
         $this->object->addQuery($this->I->createNameSearchQuery());
 
@@ -235,9 +163,16 @@ class SearchManagerTest extends \Codeception\TestCase\Test
 
     public function testSearchWithFailedResultsRaisesException()
     {
-        $sphinx = $this->I->createSphinxClientWithNoResultsAndError();
+        $helper = $this->I;
 
-        $this->object->setSphinx($sphinx);
+        $settings = Stub::make(ServerSettings::class, [
+            'connect' => function () use ($helper) {
+                return $helper->createSphinxClientWithNoResultsAndError();
+            }
+        ]);
+
+        $this->object = new SearchManager($settings);
+
         $this->object->addQuery($this->I->createAddressSearchQuery());
         $this->object->addQuery($this->I->createNameSearchQuery());
 
@@ -253,7 +188,6 @@ class SearchManagerTest extends \Codeception\TestCase\Test
         foreach ( $this->object->getIterator() as $query ) {
             $this->assertInstanceOf(SearchQuery::class, $query);
         }
-
     }
 }
 

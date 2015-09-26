@@ -24,6 +24,9 @@
     "php": ">=5.5.0",
     "ext-sphinx": "*"
   },
+  "suggest": {
+    "gigablah/sphinxphp": "2.0.*"
+  },
   "require-dev": {
     "codeception/codeception": "2.1.*"
   }

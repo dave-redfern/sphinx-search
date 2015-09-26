@@ -55,7 +55,7 @@ use Scorpio\SphinxSearch\Query\SortBy;
  * $oQuery->addFilter(new Filter\FilterAttribute(SomeIndex::FILTER_ATTRIBUTE_3, array(101)));
  * $oQuery->setLimit(100);
  *
- * $oSphinx = new SearchManager(new \SphinxClient('localhost', '9312'));
+ * $oSphinx = new SearchManager(new ServerSettings('localhost', '9312'));
  * $oSphinx->addQuery($oQuery);
  * $results = $oSphinx->search();
  * </code>
@@ -197,7 +197,7 @@ class SearchQuery
      *
      * @param \SphinxClient $sphinx
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function bindToSphinx(\SphinxClient $sphinx)
     {
@@ -233,7 +233,7 @@ class SearchQuery
      * @param string|array $fields
      * @param string       $keywords
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function queryInFields($fields, $keywords)
     {
@@ -255,7 +255,7 @@ class SearchQuery
      * @param integer $function
      * @param string  $groupBy
      *
-     * @return SearchQuery
+     * @return $this
      * @throws \InvalidArgumentException
      */
     public function addGroupBy($attribute, $function, $groupBy = '@group desc')
@@ -280,7 +280,7 @@ class SearchQuery
      * @param integer $mode
      * @param string  $sortBy
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function addSortBy($mode, $sortBy)
     {
@@ -314,7 +314,7 @@ class SearchQuery
     /**
      * @param SearchIndex $index
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function setIndex(SearchIndex $index)
     {
@@ -334,9 +334,23 @@ class SearchQuery
     }
 
     /**
+     * Creates a wildcard search query if the index supports it
+     *
+     * @param string $keywords
+     *
+     * @return $this
+     */
+    public function createWildcardQueryString($keywords)
+    {
+        $this->query = '*' . str_replace(' ', '* *', $keywords) . '*';
+
+        return $this;
+    }
+
+    /**
      * @param string $query
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function setQuery($query)
     {
@@ -356,7 +370,7 @@ class SearchQuery
     /**
      * @param integer $mode
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function setMatchMode($mode)
     {
@@ -380,7 +394,7 @@ class SearchQuery
      *
      * @param GroupBy $groupBy
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function setGroupBy(GroupBy $groupBy)
     {
@@ -402,7 +416,7 @@ class SearchQuery
      *
      * @param SortBy $sortBy
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function setSortBy(SortBy $sortBy)
     {
@@ -478,7 +492,7 @@ class SearchQuery
      *
      * @param FilterInterface $filter
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function addFilter(FilterInterface $filter)
     {
@@ -492,7 +506,7 @@ class SearchQuery
     /**
      * @param string|FilterInterface $filter
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function removeFilter($filter)
     {
@@ -510,7 +524,7 @@ class SearchQuery
     /**
      * Removes all filters from this query
      *
-     * @return SearchQuery
+     * @return $this
      */
     public function clearFilters()
     {

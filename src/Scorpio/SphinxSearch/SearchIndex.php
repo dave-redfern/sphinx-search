@@ -22,12 +22,8 @@ use Scorpio\SphinxSearch\Result\ResultSet;
  * set of attributes (filters) that can be used to filter the results by.
  * Filters can also be used to group and order results.
  *
- * In addition an index can support wildcard searches (*), but this can only
- * be enabled if the index config definition explicitly enables it.
- *
  * The index object includes several helper methods for creating field based
- * query strings and for wrapping search keywords in wildcards - if supported
- * by the index.
+ * query strings and for wrapping search keywords in wildcards.
  *
  * @package    Scorpio\SphinxSearch
  * @subpackage Scorpio\SphinxSearch\SearchIndex
@@ -54,20 +50,6 @@ class SearchIndex
      * @var string
      */
     protected $resultClass = ResultRecord::class;
-
-    /**
-     * Does the index support wildcard searches (*)
-     *
-     * @var boolean
-     */
-    protected $supportsWildcard = false;
-
-    /**
-     * Should wildcards be used by default in keywords
-     *
-     * @var boolean
-     */
-    protected $useWildcardKeywords = false;
 
     /**
      * An array of fields in the full text index
@@ -194,67 +176,6 @@ class SearchIndex
     public function isValidFilter($filter)
     {
         return in_array($filter, $this->getAvailableFilters());
-    }
-
-    /**
-     * Returns true if index supports asterisk as wildcard
-     *
-     * @return boolean
-     */
-    public function isWildcardSupported()
-    {
-        return $this->supportsWildcard;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function useWildcardKeywords()
-    {
-        return $this->useWildcardKeywords;
-    }
-
-    /**
-     * Set to true to automatically convert keywords to wildcard search terms
-     *
-     * @param boolean $wildcardKeywords
-     *
-     * @return SearchIndex
-     */
-    public function setUseWildcardKeywords($wildcardKeywords)
-    {
-        $this->useWildcardKeywords = $wildcardKeywords;
-
-        return $this;
-    }
-
-
-    /**
-     * Converts a keyword string to use asterisks around each word
-     *
-     * @param $keywords
-     *
-     * @return string
-     */
-    public function convertKeywordsToWildcard($keywords)
-    {
-        return '*' . str_replace(' ', '* *', $keywords) . '*';
-    }
-
-    /**
-     * Creates a wildcard search query if the index supports it
-     *
-     * @param string $keywords
-     *
-     * @return string
-     */
-    public function createWildcardQueryString($keywords)
-    {
-        if ($this->isWildcardSupported() && $this->useWildcardKeywords()) {
-            return $this->convertKeywordsToWildcard($keywords);
-        } else {
-            return $keywords;
-        }
     }
 
     /**

@@ -115,25 +115,6 @@ class SearchIndexTest extends \Codeception\TestCase\Test
         $this->assertTrue($this->object->isValidFilter('bob'));
     }
 
-    public function testSetUseWildcardKeywords()
-    {
-        $this->assertFalse($this->object->useWildcardKeywords());
-        $this->object->setUseWildcardKeywords(true);
-        $this->assertTrue($this->object->useWildcardKeywords());
-    }
-
-    public function testIsWildCardSupported()
-    {
-        $this->assertFalse($this->object->isWildcardSupported());
-    }
-
-    public function testCreateWildcardQueryStringOnlyAppliesIfWildcardsEnabled()
-    {
-        $this->assertEquals('bob smith', $this->object->createWildcardQueryString('bob smith'));
-        $this->object->enableWildcards();
-        $this->assertEquals('*bob* *smith*', $this->object->createWildcardQueryString('bob smith'));
-    }
-
     public function testCreateFieldQueryStringRaisesExceptionForInvalidField()
     {
         $this->setExpectedException('InvalidArgumentException');

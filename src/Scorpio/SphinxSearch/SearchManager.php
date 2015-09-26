@@ -24,10 +24,9 @@ use Scorpio\SphinxSearch\Result\ResultSet;
  * The query contains all filters, sorting and query text used for that result set. Each
  * query requires an index definition that must be implemented.
  *
- * NOTE: the SphinxClient that this class uses allows multiple queries to be executed
- * in one request BUT you cannot remove a query once it has been bound to Sphinx. If you
- * need to run many single queries you must fetch a new instance of SphinxSearch or
- * clone a default instance that has not had any queries bound to it.
+ * SearchManager will use a fresh Sphinx connection for every batch of queries run. This
+ * is because the SphinxClient in the extension does not allow removing queries and cannot
+ * be cloned.
  *
  * Example Usage:
  *
@@ -44,7 +43,7 @@ use Scorpio\SphinxSearch\Result\ResultSet;
  *      new SortBy(Query\SortBy::SORT_BY_RELEVANCE, '@relevance DESC')
  * );
  *
- * $oSphinx = new SearchManager(new \SphinxClient('localhost', '9312'));
+ * $oSphinx = new SearchManager(new ServerSettings('localhost', '9312'));
  * $oSphinx->addQuery($oQuery);
  * // $results contains all query result sets
  * $results = $oSphinx->search();
@@ -60,7 +59,7 @@ use Scorpio\SphinxSearch\Result\ResultSet;
  *
  * Run several queries in one batch:
  * <code>
- * $oSphinx = new SearchManager(new \SphinxClient('localhost', '9312'));
+ * $oSphinx = new SearchManager(new ServerSettings('localhost', '9312'));
  * $oSphinx->addQuery(
  *      new SearchQuery(
  *          new SomeSearchIndex(), 'some keywords', SearchQuery::MATCH_ADVANCED, [
@@ -105,22 +104,29 @@ class SearchManager implements \IteratorAggregate, \Countable
     private $queries = [];
 
     /**
-     * The sphinx client instance
+     * The sphinx ServerSettings instance
+     *
+     * @var ServerSettings
+     */
+    private $settings;
+
+    /**
+     * The current Sphinx connection instance
      *
      * @var \SphinxClient
      */
-    private $sphinx;
+    private $currentConnection;
 
 
 
     /**
      * Constructor.
      *
-     * @param \SphinxClient $sphinx
+     * @param ServerSettings $settings
      */
-    function __construct(\SphinxClient $sphinx = null)
+    function __construct(ServerSettings $settings)
     {
-        $this->sphinx = $sphinx;
+        $this->settings = $settings;
     }
 
     /**
@@ -146,8 +152,8 @@ class SearchManager implements \IteratorAggregate, \Countable
      */
     public function reset()
     {
-        $this->sphinx  = null;
-        $this->queries = [];
+        $this->currentConnection = null;
+        $this->queries           = [];
     }
 
 
@@ -161,7 +167,7 @@ class SearchManager implements \IteratorAggregate, \Countable
      */
     public function addQuery(SearchQuery $query)
     {
-        $query->bindToSphinx($this->sphinx);
+        $query->bindToSphinx($this->getCurrentConnection());
         $this->queries[$query->getId()] = $query;
 
         return $this;
@@ -195,8 +201,8 @@ class SearchManager implements \IteratorAggregate, \Countable
             throw new \RuntimeException(sprintf('No queries have been set to run'));
         }
 
-        if (false === $results = $this->sphinx->runQueries()) {
-            $this->throwException($this->sphinx->getLastError());
+        if (false === $results = $this->getCurrentConnection()->runQueries()) {
+            $this->throwException($this->getCurrentConnection()->getLastError());
         }
 
         /*
@@ -218,6 +224,8 @@ class SearchManager implements \IteratorAggregate, \Countable
                 $return[$id] = new $class($oQuery, $result);
             }
         }
+
+        $this->currentConnection = null;
 
         return $return;
     }
@@ -244,47 +252,48 @@ class SearchManager implements \IteratorAggregate, \Countable
     }
 
 
+
     /**
      * Returns the current Sphinx client instance if there is one
      *
-     * @return \SphinxClient
+     * @return ServerSettings
      */
-    public function getSphinx()
+    public function getSettings()
     {
-        return $this->sphinx;
+        return $this->settings;
     }
 
     /**
-     * @param \SphinxClient $sphinx
+     * Set the Sphinx ServerSettings instance
+     *
+     * This will reset the current connection and any assigned queries. Queries
+     * must be manually added again after calling this method.
+     *
+     * @param ServerSettings $settings
      *
      * @return $this
      */
-    public function setSphinx(\SphinxClient $sphinx)
+    public function setSettings(ServerSettings $settings)
     {
-        $this->sphinx = $sphinx;
+        $this->settings          = $settings;
+        $this->currentConnection = null;
+        $this->queries           = [];
 
         return $this;
     }
 
     /**
-     * Set the server / port to use
+     * Returns an active Sphinx connection from the settings
      *
-     * @param string  $server
-     * @param integer $port
-     * @param integer $maxQueryTime (optional) How long a query should be allowed to run for (ms)
-     *
-     * @return SearchManager
+     * @return \SphinxClient
      */
-    public function setServer($server = 'localhost', $port = 9312, $maxQueryTime = 5000)
+    public function getCurrentConnection()
     {
-        if ( null === $sphinx = $this->getSphinx() ) {
-            throw new \RuntimeException('A SphinxClient instance has not been assigned to the Manager yet');
+        if ( !$this->currentConnection ) {
+            $this->currentConnection = $this->settings->connect();
         }
 
-        $sphinx->setServer($server, $port);
-        $sphinx->setMaxQueryTime($maxQueryTime);
-
-        return $this;
+        return $this->currentConnection;
     }
 
     /**

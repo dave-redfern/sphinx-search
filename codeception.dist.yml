@@ -25,5 +25,5 @@ coverage:
             - src/Scorpio/SphinxSearch/*.php
 
     blacklist:
-        exclude:
+        include:
             - src/Scorpio/SphinxSearch/Resources/stubs/SphinxClient.php

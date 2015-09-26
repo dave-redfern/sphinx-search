@@ -74,7 +74,7 @@ class SearchQueryTest extends \Codeception\TestCase\Test
     public function testBindToSphinx()
     {
         $this->object->bindToSphinx($this->I->getSphinxClientMock());
-        $this->assertEquals(101, $this->object->getId());
+        $this->assertEquals(1, $this->object->getId());
     }
 
     public function testBindToSphinxWithAllObjects()
@@ -168,6 +168,11 @@ class SearchQueryTest extends \Codeception\TestCase\Test
     {
         $this->object->setQuery('bob bob bob');
         $this->assertEquals('bob bob bob', $this->object->getQuery());
+    }
+
+    public function testCreateWildcardQueryString()
+    {
+        $this->assertEquals('*bob* *smith*', $this->object->createWildcardQueryString('bob smith')->getQuery());
     }
 
     public function testSetMatchMode()

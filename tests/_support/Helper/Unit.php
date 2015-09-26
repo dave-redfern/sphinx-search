@@ -35,18 +35,7 @@ class Unit extends \Codeception\Module
         /**
          * Note: most SphinxClient calls require a valid sphinx connection, so we simply stub it out.
          */
-        return Stub::make(\SphinxClient::class, [
-            'setFilter' => function () { return true; },
-            'setFilterFloatRange' => function () { return true; },
-            'setFilterRange' => function () { return true; },
-            'setLimits' => function () { return true; },
-            'setSortMode' => function () { return true; },
-            'setGroupBy' => function () { return true; },
-            'resetFilters' => function () { return true; },
-            'resetGroupBy' => function () { return true; },
-            'setMatchMode' => function () { return true; },
-            'addQuery' => function () { return 101; },
-        ]);
+        return Stub::make(\SphinxClient::class, $this->_getBaseMethods());
     }
 
     /**
@@ -70,11 +59,13 @@ class Unit extends \Codeception\Module
     }
 
     /**
-     * @return \SphinxClient
+     * @param string $copyMethod
+     *
+     * @return array
      */
-    public function createSphinxClientWithResults()
+    protected function _getBaseMethods($copyMethod = 'getSphinxClientMock')
     {
-        return Stub::make(\SphinxClient::class, [
+        return [
             'setServer'           => function () {
                 return true;
             },
@@ -113,6 +104,15 @@ class Unit extends \Codeception\Module
 
                 return ++$i;
             },
+        ];
+    }
+
+    /**
+     * @return \SphinxClient
+     */
+    public function createSphinxClientWithResults()
+    {
+        return Stub::make(\SphinxClient::class, array_merge($this->_getBaseMethods('createSphinxClientWithResults'), [
             'runQueries'          => function () {
                 return [
                     1 => [
@@ -153,7 +153,7 @@ class Unit extends \Codeception\Module
                     ],
                 ];
             },
-        ]);
+        ]));
     }
 
     /**
@@ -161,45 +161,7 @@ class Unit extends \Codeception\Module
      */
     public function createSphinxClientWithIncompleteResults()
     {
-        return Stub::make(\SphinxClient::class, [
-            'setServer'           => function () {
-                return true;
-            },
-            'setMaxQueryTime'     => function () {
-                return true;
-            },
-            'setFilter'           => function () {
-                return true;
-            },
-            'setFilterFloatRange' => function () {
-                return true;
-            },
-            'setFilterRange'      => function () {
-                return true;
-            },
-            'setLimits'           => function () {
-                return true;
-            },
-            'setSortMode'         => function () {
-                return true;
-            },
-            'setGroupBy'          => function () {
-                return true;
-            },
-            'resetFilters'        => function () {
-                return true;
-            },
-            'resetGroupBy'        => function () {
-                return true;
-            },
-            'setMatchMode'        => function () {
-                return true;
-            },
-            'addQuery'            => function () {
-                static $i;
-
-                return ++$i;
-            },
+        return Stub::make(\SphinxClient::class, array_merge($this->_getBaseMethods('createSphinxClientWithIncompleteResults'), [
             'runQueries'          => function () {
                 return [
                     1 => [
@@ -223,7 +185,7 @@ class Unit extends \Codeception\Module
                     2 => [],
                 ];
             },
-        ]);
+        ]));
     }
 
     /**
@@ -231,52 +193,14 @@ class Unit extends \Codeception\Module
      */
     public function createSphinxClientWithNoResultsAndError()
     {
-        return Stub::make(\SphinxClient::class, [
-            'setServer'           => function () {
-                return true;
-            },
-            'setMaxQueryTime'     => function () {
-                return true;
-            },
-            'setFilter'           => function () {
-                return true;
-            },
-            'setFilterFloatRange' => function () {
-                return true;
-            },
-            'setFilterRange'      => function () {
-                return true;
-            },
-            'setLimits'           => function () {
-                return true;
-            },
-            'setSortMode'         => function () {
-                return true;
-            },
-            'setGroupBy'          => function () {
-                return true;
-            },
-            'resetFilters'        => function () {
-                return true;
-            },
-            'resetGroupBy'        => function () {
-                return true;
-            },
-            'setMatchMode'        => function () {
-                return true;
-            },
-            'addQuery'            => function () {
-                static $i;
-
-                return ++$i;
-            },
+        return Stub::make(\SphinxClient::class, array_merge($this->_getBaseMethods('createSphinxClientWithNoResultsAndError'), [
             'runQueries'          => function () {
                 return false;
             },
             'getLastError'        => function () {
                 return 'no results';
             },
-        ]);
+        ]));
     }
 }
 
