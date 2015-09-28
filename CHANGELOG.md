@@ -1,6 +1,16 @@
 Scorpio SphinxSearch Library Change Log
 =======================================
 
+2015-09-27 0.2.1
+----------------
+
+Added a pseudo query builder type thingy for building query strings in code with
+built-in escaping and parenthesis handling.
+
+Made some minor refactorings in SearchIndex for better code re-use.
+
+Added additional helper methods including iterators.
+
 2015-09-26 0.2.0
 ----------------
 

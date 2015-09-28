@@ -12,6 +12,9 @@
 namespace Helper;
 
 use Codeception\Util\Stub;
+use Scorpio\SphinxSearch\Query\Builder;
+use Scorpio\SphinxSearch\Query\Criteria;
+use Scorpio\SphinxSearch\Query\Field;
 use Scorpio\SphinxSearch\SearchIndex;
 use Scorpio\SphinxSearch\SearchQuery;
 
@@ -39,6 +42,30 @@ class Unit extends \Codeception\Module
     }
 
     /**
+     * @return Builder
+     */
+    public function createQueryBuilder()
+    {
+        return new Builder(new SearchIndex('index', ['field1', 'field2']));
+    }
+
+    /**
+     * @return Builder
+     */
+    public function createNullQueryField()
+    {
+        return new Field($this->createQueryBuilder(), null);
+    }
+
+    /**
+     * @return Builder
+     */
+    public function createNamedQueryField()
+    {
+        return new Field($this->createQueryBuilder(), 'field1');
+    }
+
+    /**
      * @return SearchQuery
      */
     public function createNameSearchQuery()
@@ -46,6 +73,14 @@ class Unit extends \Codeception\Module
         return new SearchQuery(
             new TestIndexName(), '', SearchQuery::RANK_PROXIMITY_BM25, []
         );
+    }
+
+    /**
+     * @return Criteria
+     */
+    public function createCriteria()
+    {
+        return new Criteria($this->createNamedQueryField());
     }
 
     /**
