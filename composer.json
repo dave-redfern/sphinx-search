@@ -21,10 +21,10 @@
     "bin-dir": "bin"
   },
   "require": {
-    "php": ">=5.5.0",
-    "ext-sphinx": "*"
+    "php": ">=5.5.0"
   },
   "suggest": {
+    "ext-sphinx": "*",
     "gigablah/sphinxphp": "2.0.*"
   },
   "require-dev": {

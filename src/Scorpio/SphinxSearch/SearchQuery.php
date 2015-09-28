@@ -13,6 +13,7 @@ namespace Scorpio\SphinxSearch;
 
 use Scorpio\SphinxSearch\Filter\FilterInterface;
 use Scorpio\SphinxSearch\Filter\FilterAttribute;
+use Scorpio\SphinxSearch\Query\Builder;
 use Scorpio\SphinxSearch\Query\GroupBy;
 use Scorpio\SphinxSearch\Query\Limits;
 use Scorpio\SphinxSearch\Query\SortBy;
@@ -64,13 +65,13 @@ use Scorpio\SphinxSearch\Query\SortBy;
  * @subpackage Scorpio\SphinxSearch\SearchQuery
  * @author     Dave Redfern <dave@scorpioframework.com>
  */
-class SearchQuery
+class SearchQuery implements \IteratorAggregate, \Countable
 {
 
-    const RANK_NONE           = SPH_RANK_NONE;      // ranker just assigns every document weight to 1.
-    const RANK_WORD_COUNT     = SPH_RANK_WORDCOUNT; // ranker counts all the keyword occurrences and multiplies them by user field weights.
+    const RANK_NONE           = SPH_RANK_NONE;           // ranker just assigns every document weight to 1
+    const RANK_WORD_COUNT     = SPH_RANK_WORDCOUNT;      // counts keyword matches, multiplies by user field weights
     const RANK_PROXIMITY_BM25 = SPH_RANK_PROXIMITY_BM25; // the default SphinxQL ranker
-    const RANK_BM25           = SPH_RANK_BM25 ;          // ranker sums user weights of the matched fields and BM25.
+    const RANK_BM25           = SPH_RANK_BM25 ;          // ranker sums user weights of the matched fields and BM25
 
     /**
      * @var integer
@@ -88,9 +89,14 @@ class SearchQuery
     private $filters = [];
 
     /**
+     * @var Builder
+     */
+    private $builder;
+
+    /**
      * @var string
      */
-    private $query = '';
+    private $query;
 
     /**
      * @var integer
@@ -126,7 +132,7 @@ class SearchQuery
      * @param Limits            $limits   Query limits
      */
     public function __construct(
-        SearchIndex $index, $query = '', $rankMode = null, array $filters = [],
+        SearchIndex $index, $query = null, $rankMode = null, array $filters = [],
         SortBy $sortBy = null, GroupBy $groupBy = null, Limits $limits = null
     )
     {
@@ -181,6 +187,22 @@ class SearchQuery
         return $this->__toString();
     }
 
+    /**
+     * @return \ArrayIterator
+     */
+    public function getIterator()
+    {
+        return new \ArrayIterator($this->filters);
+    }
+
+    /**
+     * @return integer
+     */
+    public function count()
+    {
+        return count($this->filters);
+    }
+
 
 
     /**
@@ -215,10 +237,16 @@ class SearchQuery
             $filter->bindToSphinx($sphinx);
         }
 
+        if ( $this->builder instanceof Builder && !$this->query ) {
+            $this->query = $this->builder->getQuery();
+        }
+
         $this->id = $sphinx->addQuery($this->query, $this->index->getIndexName());
 
         return $this;
     }
+
+
 
     /**
      * Creates a search query for specific fields in the index using the keywords.
@@ -239,6 +267,20 @@ class SearchQuery
     }
 
     /**
+     * Creates a new query builder linking it to the current SearchIndex
+     *
+     * Note: there can only be one query builder per search query
+     *
+     * @return Builder
+     */
+    public function createQueryBuilder()
+    {
+        $this->builder = Builder::find($this->index);
+
+        return $this->builder;
+    }
+
+    /**
      * Sets the grouping to be used on the results
      *
      * $attribute is the name of a valid attribute on the current index.
@@ -256,9 +298,11 @@ class SearchQuery
     public function addGroupBy($attribute, $function, $groupBy = '@group desc')
     {
         if (!$this->index->isValidAttribute($attribute)) {
-            throw new \InvalidArgumentException(
-                sprintf('Group by filter attribute "%s" is not valid for index "%s', $attribute, $this->index->getIndexName())
-            );
+            $i = $this->index->getIndexName();
+            $a = $attribute;
+            $m = 'Group by filter attribute "%s" is not valid for index "%s';
+
+            throw new \InvalidArgumentException(sprintf($m, $a, $i));
         }
 
         $this->setGroupBy(new GroupBy($attribute, $function, $groupBy));
@@ -280,6 +324,36 @@ class SearchQuery
     public function addSortBy($mode, $sortBy)
     {
         $this->setSortBy(new SortBy($mode, $sortBy));
+
+        return $this;
+    }
+
+    /**
+     * Alias of setRankingMode
+     *
+     * @param integer $mode
+     *
+     * @return $this
+     */
+    public function rankBy($mode)
+    {
+        $this->setRankingMode($mode);
+
+        return $this;
+    }
+
+    /**
+     * Set a new Limits instance
+     *
+     * @param integer $offset
+     * @param integer $limit
+     * @param integer $maxResults
+     *
+     * @return $this
+     */
+    public function limit($offset, $limit, $maxResults = 5000)
+    {
+        $this->setLimits(new Limits($offset, $limit, $maxResults));
 
         return $this;
     }
@@ -319,6 +393,38 @@ class SearchQuery
     }
 
     /**
+     * @return Builder
+     */
+    public function getQueryBuilder()
+    {
+        return $this->builder;
+    }
+
+    /**
+     * Set a pre-built Builder instance
+     *
+     * Raises exception if the Builder index is not the same as the query index.
+     *
+     * @param Builder $builder
+     *
+     * @return $this
+     */
+    public function setQueryBuilder(Builder $builder)
+    {
+        if ( $this->index !== $builder->getIndex() ) {
+            throw new \InvalidArgumentException(
+                sprintf('Index mismatch in builder "%s" vs query "%s"',
+                    $builder->getIndex()->getIndexName(), $this->index->getIndexName()
+                )
+            );
+        }
+
+        $this->builder = $builder;
+
+        return $this;
+    }
+
+    /**
      * Returns the current query string
      *
      * @return string
@@ -329,7 +435,7 @@ class SearchQuery
     }
 
     /**
-     * Creates a wildcard search query if the index supports it
+     * Creates a wildcard search query for all keywords in the supplied string
      *
      * @param string $keywords
      *
@@ -343,6 +449,8 @@ class SearchQuery
     }
 
     /**
+     * Set a valid Sphinx search query string which could be just keywords
+     *
      * @param string $query
      *
      * @return $this

@@ -13,6 +13,7 @@ namespace Scorpio\SphinxSearch;
 
 use Codeception\Util\Stub;
 use Scorpio\SphinxSearch\Filter\FilterAttribute;
+use Scorpio\SphinxSearch\Query\Builder;
 use Scorpio\SphinxSearch\Query\GroupBy;
 use Scorpio\SphinxSearch\Query\Limits;
 use Scorpio\SphinxSearch\Query\SortBy;
@@ -159,9 +160,30 @@ class SearchQueryTest extends \Codeception\TestCase\Test
         $this->assertEquals('sort by', $this->object->getSortBy()->getSortBy());
     }
 
+    public function testLimit()
+    {
+        $this->object->limit(20, 34, 123);
+        $this->assertEquals(20, $this->object->getLimits()->getOffset());
+        $this->assertEquals(34, $this->object->getLimits()->getLimit());
+        $this->assertEquals(123, $this->object->getLimits()->getMaxResults());
+    }
+
     public function testGetIndex()
     {
         $this->assertInstanceOf(SearchIndex::class, $this->object->getIndex());
+    }
+
+    public function testSetQueryBuilder()
+    {
+        $this->assertNull($this->object->getQueryBuilder());
+        $this->object->setQueryBuilder(new Builder($this->object->getIndex()));
+        $this->assertInstanceOf(Builder::class, $this->object->getQueryBuilder());
+    }
+
+    public function testSetQueryBuilderWithDifferentIndexRaisesException()
+    {
+        $this->setExpectedException('InvalidArgumentException');
+        $this->object->setQueryBuilder(new Builder(new SearchIndex()));
     }
 
     public function testSetQuery()
@@ -175,9 +197,15 @@ class SearchQueryTest extends \Codeception\TestCase\Test
         $this->assertEquals('*bob* *smith*', $this->object->createWildcardQueryString('bob smith')->getQuery());
     }
 
-    public function testSetMatchMode()
+    public function testSetRankingMode()
     {
         $this->object->setRankingMode(SearchQuery::RANK_WORD_COUNT);
+        $this->assertEquals(SearchQuery::RANK_WORD_COUNT, $this->object->getRankingMode());
+    }
+
+    public function testRankBy()
+    {
+        $this->object->rankBy(SearchQuery::RANK_WORD_COUNT);
         $this->assertEquals(SearchQuery::RANK_WORD_COUNT, $this->object->getRankingMode());
     }
 
@@ -272,6 +300,29 @@ class SearchQueryTest extends \Codeception\TestCase\Test
         $this->assertCount(0, $this->object->getFilters());
     }
 
+    public function testCount()
+    {
+        $this->assertEquals(0, $this->object->count());
+        $this->object->setIndex(new TestIndex());
+        $this->assertInstanceOf(FilterAttribute::class, $this->object->getFilter('bob'));
+        $this->assertInstanceOf(FilterAttribute::class, $this->object->getFilter('age'));
+        $this->assertInstanceOf(FilterAttribute::class, $this->object->getFilter('gender'));
+        $this->assertEquals(3, $this->object->count());
+    }
+
+    public function testIteratingSearchQueryIteratesFilters()
+    {
+        $this->assertEquals(0, $this->object->count());
+        $this->object->setIndex(new TestIndex());
+        $this->assertInstanceOf(FilterAttribute::class, $this->object->getFilter('bob'));
+        $this->assertInstanceOf(FilterAttribute::class, $this->object->getFilter('age'));
+        $this->assertInstanceOf(FilterAttribute::class, $this->object->getFilter('gender'));
+
+        foreach ( $this->object as $filter ) {
+            $this->assertInstanceOf(FilterAttribute::class, $filter);
+        }
+    }
+
     public function testCloningQueryDeepClonesFilters()
     {
         $query = new SearchQuery(new TestIndex(), '', null, [
@@ -284,5 +335,38 @@ class SearchQueryTest extends \Codeception\TestCase\Test
         foreach ($query->getFilters() as $filter ) {
             $this->assertNotSame($filter, $query2->getFilter($filter->getName()));
         }
+    }
+
+    public function testCreateQueryBuilder()
+    {
+        $this->assertInstanceOf(Builder::class, $this->object->createQueryBuilder());
+
+        $builder = $this->object->createQueryBuilder();
+        $this->assertSame($builder, $this->object->getQueryBuilder());
+        $this->assertSame($builder->getIndex(), $this->object->getIndex());
+    }
+
+    public function testBindToSphinxWillBindQueryBuilderIfNoQuery()
+    {
+        $builder = $this->object->createQueryBuilder();
+        $builder->in()->whereField()->contains('bob alan derek');
+
+        $this->assertNull($this->object->getQuery());
+
+        $this->object->bindToSphinx($this->I->getSphinxClientMock());
+
+        $this->assertEquals('(bob alan derek)', $this->object->getQuery());
+    }
+
+    public function testBindToSphinxWillIgnoreQueryBuilderIfQuerySet()
+    {
+        $builder = $this->object->createQueryBuilder();
+        $builder->in()->whereField()->contains('bob alan derek');
+
+        $this->object->setQuery('sue alice colby');
+
+        $this->object->bindToSphinx($this->I->getSphinxClientMock());
+
+        $this->assertNotEquals('(bob alan derek)', $this->object->getQuery());
     }
 }

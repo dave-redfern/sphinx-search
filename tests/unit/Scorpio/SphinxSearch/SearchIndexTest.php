@@ -108,6 +108,12 @@ class SearchIndexTest extends \Codeception\TestCase\Test
         $this->assertInternalType('array', $this->object->getAvailableAttributes());
     }
 
+    public function testConvertFieldToArray()
+    {
+        $this->assertSame(['field1', 'field2'], $this->object->convertFieldToArray('field1,field2'));
+        $this->assertSame(['field1', 'field2'], $this->object->convertFieldToArray('field1, field2'));
+    }
+
     public function testIsValidField()
     {
         $this->assertFalse($this->object->isValidField('bob'));

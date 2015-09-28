@@ -170,13 +170,21 @@ class SearchIndex implements SearchIndexInterface
     /**
      * Returns true if field is part of the full text index
      *
-     * @param string $field
+     * @param string|array $field
      *
      * @return boolean
      */
     public function isValidField($field)
     {
-        return in_array($field, $this->getAvailableFields());
+        $fields = $this->convertFieldToArray($field);
+
+        foreach ($fields as $fd) {
+            if (!in_array($fd, $this->getAvailableFields())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -202,6 +210,32 @@ class SearchIndex implements SearchIndexInterface
      */
     public function createFieldQueryString($field, $keywords)
     {
+        $fields = $this->convertFieldToArray($field);
+
+        if (!$this->isValidField($fields)) {
+            throw new \InvalidArgumentException(
+                sprintf('Field "%s" is not valid for the current search', $field)
+            );
+        }
+
+        if (count($fields) > 1) {
+            $field = '(' . implode(',', $fields) . ')';
+        } else {
+            $field = $fields[0];
+        }
+
+        return sprintf('@%s %s', $field, $keywords);
+    }
+
+    /**
+     * Converts comma separated lists of fields to an array
+     *
+     * @param string|array $field
+     *
+     * @return array
+     */
+    public function convertFieldToArray($field)
+    {
         if (!is_array($field)) {
             if (strpos($field, ',') !== false) {
                 $field = explode(',', str_replace(' ', '', $field));
@@ -209,20 +243,7 @@ class SearchIndex implements SearchIndexInterface
                 $field = [$field];
             }
         }
-        foreach ($field as $fd) {
-            if (!$this->isValidField($fd)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Field "%s" is not valid for the current search', $fd)
-                );
-            }
-        }
 
-        if (count($field) > 1) {
-            $field = '(' . implode(',', $field) . ')';
-        } else {
-            $field = $field[0];
-        }
-
-        return sprintf('@%s %s', $field, $keywords);
+        return $field;
     }
 }
