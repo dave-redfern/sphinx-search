@@ -3,7 +3,6 @@
   "type": "library",
   "description": "A set of classes wrapping the SphinxClient extension in a object-oriented way.",
   "keywords": [ "scorpio", "sphinx", "sphinx search" ],
-  "minimum-stability": "dev",
   "license": "BSD",
   "authors": [
     {
