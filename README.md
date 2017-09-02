@@ -1,6 +1,11 @@
 Scorpio SphinxSearch
 ====================
 
+The Sphinx extension is deprecated and officially unsupported. This package has been updated, but is now
+deprecated. Please see: https://github.com/FoolCode/SphinxQL-Query-Builder for an alternative. This package
+should still function provided an instance implementing the SphinxClient is used e.g.:
+https://github.com/nilportugues/php-sphinx-search.
+
 SphinxSearch library is a wrapper around the PHP Sphinx extension that allows for a cleaner object oriented interface.
 
 Most aspects of the API are covered.
@@ -41,13 +46,17 @@ CentOS:
  * yum install php56-sphinx sphinx
  * configure sphinx server and data
 
+__Note:__ the last available extension version is for PHP56 (1.3.3).
+
 Setup code:
 
-    require_once 'path/to/vendor/autoload.php';
+```php
+require_once 'path/to/vendor/autoload.php';
 
-    use Scorpio\SphinxSearch\SearchManager;
+use Scorpio\SphinxSearch\SearchManager;
 
-    $manager = new SearchManager(new ServerSettings('localhost', 9312));
+$manager = new SearchManager(new ServerSettings('localhost', 9312));
+```
 
 To search via Sphinx, you need to create Index definitions. Each index must be created
 in the Sphinx config file first. A specific instance for each index must then be

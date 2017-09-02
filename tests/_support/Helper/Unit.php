@@ -3,7 +3,7 @@
 /*
  * This file is part of the Scorpio Sphinx-Search package.
  *
- * (c) Dave Redfern <dave@scorpioframework.com>
+ * (c) Dave Redfern <info@somnambulist.tech>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,34 +11,43 @@
 
 namespace Helper;
 
-use Codeception\Util\Stub;
+use PHPUnit\Framework\TestCase;
 use Scorpio\SphinxSearch\Query\Builder;
 use Scorpio\SphinxSearch\Query\Criteria;
 use Scorpio\SphinxSearch\Query\Field;
 use Scorpio\SphinxSearch\SearchIndex;
 use Scorpio\SphinxSearch\SearchQuery;
 
-require_once dirname(dirname(dirname(__DIR__))) . '/src/Scorpio/SphinxSearch/Resources/stubs/SphinxClient.php';
+require_once dirname(dirname(dirname(__DIR__))) . '/src/Resources/stubs/SphinxClient.php';
 
 /**
  * Class Unit
  *
  * @package    Helper
  * @subpackage Helper\Unit
- * @author     Dave Redfern <dave@scorpioframework.com>
  */
-class Unit extends \Codeception\Module
+class Unit extends TestCase
 {
 
     /**
+     * @param array $methods
+     *
      * @return \SphinxClient
      */
-    public function getSphinxClientMock()
+    public function getSphinxClientMock(array $methods = [])
     {
+        $methods = array_merge($this->_getBaseMethods(), $methods);
+
         /**
          * Note: most SphinxClient calls require a valid sphinx connection, so we simply stub it out.
          */
-        return Stub::make(\SphinxClient::class, $this->_getBaseMethods());
+        $mock = $this->createMock(\SphinxClient::class);
+
+        foreach ($methods as $method => $return) {
+            $mock->expects($this->any())->method($method)->will($this->returnCallback($return));
+        }
+
+        return $mock;
     }
 
     /**
@@ -50,7 +59,7 @@ class Unit extends \Codeception\Module
     }
 
     /**
-     * @return Builder
+     * @return Field
      */
     public function createNullQueryField()
     {
@@ -58,7 +67,7 @@ class Unit extends \Codeception\Module
     }
 
     /**
-     * @return Builder
+     * @return Field
      */
     public function createNamedQueryField()
     {
@@ -94,11 +103,9 @@ class Unit extends \Codeception\Module
     }
 
     /**
-     * @param string $copyMethod
-     *
      * @return array
      */
-    protected function _getBaseMethods($copyMethod = 'getSphinxClientMock')
+    protected function _getBaseMethods()
     {
         return [
             'setServer'           => function () {
@@ -131,11 +138,11 @@ class Unit extends \Codeception\Module
             'resetGroupBy'        => function () {
                 return true;
             },
-            'setRankingMode'        => function () {
+            'setRankingMode'      => function () {
                 return true;
             },
             'addQuery'            => function () {
-                static $i;
+                static $i = 0;
 
                 return ++$i;
             },
@@ -147,7 +154,7 @@ class Unit extends \Codeception\Module
      */
     public function createSphinxClientWithResults()
     {
-        return Stub::make(\SphinxClient::class, array_merge($this->_getBaseMethods('createSphinxClientWithResults'), [
+        $mock = $this->getSphinxClientMock([
             'runQueries'          => function () {
                 return [
                     1 => [
@@ -188,7 +195,9 @@ class Unit extends \Codeception\Module
                     ],
                 ];
             },
-        ]));
+        ]);
+
+        return $mock;
     }
 
     /**
@@ -196,7 +205,7 @@ class Unit extends \Codeception\Module
      */
     public function createSphinxClientWithIncompleteResults()
     {
-        return Stub::make(\SphinxClient::class, array_merge($this->_getBaseMethods('createSphinxClientWithIncompleteResults'), [
+        $mock = $this->getSphinxClientMock([
             'runQueries'          => function () {
                 return [
                     1 => [
@@ -220,7 +229,9 @@ class Unit extends \Codeception\Module
                     2 => [],
                 ];
             },
-        ]));
+        ]);
+
+        return $mock;
     }
 
     /**
@@ -228,14 +239,16 @@ class Unit extends \Codeception\Module
      */
     public function createSphinxClientWithNoResultsAndError()
     {
-        return Stub::make(\SphinxClient::class, array_merge($this->_getBaseMethods('createSphinxClientWithNoResultsAndError'), [
+        $mock = $this->getSphinxClientMock([
             'runQueries'          => function () {
                 return false;
             },
             'getLastError'        => function () {
                 return 'no results';
             },
-        ]));
+        ]);
+
+        return $mock;
     }
 }
 
